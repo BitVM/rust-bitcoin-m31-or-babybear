@@ -1,0 +1,280 @@
+use bitcoin::{ScriptBuf as Script};
+use bitcoin_script::{bitcoin_script as script};
+use crate::{pushable, execute_script, unroll};
+
+pub trait U31 {
+    const MOD: u32;
+}
+
+pub struct M31;
+impl U31 for M31 {
+    const MOD: u32 = (1 << 31) - 1;
+}
+
+pub struct BabyBear;
+impl U31 for BabyBear {
+    const MOD: u32 = 15 * (1 << 27) + 1;
+}
+
+fn u31_adjust<M: U31>() -> Script {
+    script! {
+        OP_DUP
+        0 OP_LESSTHAN
+        OP_IF { M::MOD } OP_ADD OP_ENDIF
+    }
+}
+
+pub fn u31_add<M: U31>() -> Script {
+    script! {
+        { M::MOD } OP_SUB
+        OP_ADD
+        { u31_adjust::<M>() }
+    }
+}
+
+pub fn u31_double<M: U31>() -> Script {
+    script! {
+        OP_DUP
+        { u31_add::<M>() }
+    }
+}
+
+pub fn u31_sub<M: U31>() -> Script {
+    script! {
+        OP_SUB
+        { u31_adjust::<M>() }
+    }
+}
+
+pub fn u31_to_bits() -> Script {
+    script! {
+        {
+            unroll(30, |i| {
+                let a = 1 << (30 - i);
+                let b = a - 1;
+                script! {
+                    OP_DUP
+                    { b } OP_GREATERTHAN
+                    OP_SWAP OP_OVER
+                    OP_IF { a } OP_SUB OP_ENDIF
+                }
+        })}
+    }
+}
+
+pub fn u31_mul<M: U31>() -> Script {
+    script! {
+        u31_to_bits
+        0 OP_TOALTSTACK
+        31 OP_ROLL
+        {unroll(30, |_| script! {
+            1 OP_ROLL
+            OP_IF
+                OP_DUP
+                OP_FROMALTSTACK
+                { u31_add::<M>() }
+                OP_TOALTSTACK
+            OP_ENDIF
+            { u31_double::<M>() }
+        })}
+        1 OP_ROLL
+        OP_IF
+            OP_FROMALTSTACK
+            { u31_add::<M>() }
+            OP_TOALTSTACK
+        OP_ELSE
+            OP_DROP
+        OP_ENDIF
+        OP_FROMALTSTACK
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use rand_chacha::ChaCha20Rng;
+    use rand::{Rng, SeedableRng};
+
+    use super::*;
+
+    #[test]
+    fn test_u31_add() {
+        let mut prng = ChaCha20Rng::seed_from_u64(0u64);
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_m31 = a % M31::MOD;
+            let b_m31 = b % M31::MOD;
+            let sum_m31 = (a_m31 + b_m31) % M31::MOD;
+
+            let script = script! {
+                { a_m31 }
+                { b_m31 }
+                { u31_add::<M31>() }
+                { sum_m31 }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_babybear = a % BabyBear::MOD;
+            let b_babybear = b % BabyBear::MOD;
+            let sum_babybear = (a_babybear + b_babybear) % BabyBear::MOD;
+
+            let script = script! {
+                { a_babybear }
+                { b_babybear }
+                { u31_add::<BabyBear>() }
+                { sum_babybear }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success)
+        }
+    }
+
+    #[test]
+    fn test_u31_sub() {
+        let mut prng = ChaCha20Rng::seed_from_u64(0u64);
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_m31 = a % M31::MOD;
+            let b_m31 = b % M31::MOD;
+            let diff_m31 = (M31::MOD + a_m31 - b_m31) % M31::MOD;
+
+            let script = script! {
+                { a_m31 }
+                { b_m31 }
+                { u31_sub::<M31>() }
+                { diff_m31 }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_babybear = a % BabyBear::MOD;
+            let b_babybear = b % BabyBear::MOD;
+            let diff_babybear = (BabyBear::MOD + a_babybear - b_babybear) % BabyBear::MOD;
+
+            let script = script! {
+                { a_babybear }
+                { b_babybear }
+                { u31_sub::<BabyBear>() }
+                { diff_babybear }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success)
+        }
+    }
+
+    #[test]
+    fn test_u31_to_bits() {
+        let mut prng = ChaCha20Rng::seed_from_u64(0u64);
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let m31 = a % M31::MOD;
+
+            let mut bits = vec![];
+            let mut cur = m31;
+            for _ in 0..31 {
+                bits.push(cur % 2);
+                cur >>= 1;
+            }
+            assert_eq!(cur, 0);
+
+            let script = script! {
+                { m31 }
+                u31_to_bits
+                { unroll(30, |i| script! {
+                    { bits[i as usize] } OP_EQUALVERIFY
+                })}
+                { bits[30] } OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let babybear = a % BabyBear::MOD;
+
+            let mut bits = vec![];
+            let mut cur = babybear;
+            for _ in 0..31 {
+                bits.push(cur % 2);
+                cur >>= 1;
+            }
+            assert_eq!(cur, 0);
+
+            let script = script! {
+                { babybear }
+                u31_to_bits
+                { unroll(30, |i| script! {
+                    { bits[i as usize] } OP_EQUALVERIFY
+                })}
+                { bits[30] } OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+    }
+
+    #[test]
+    fn test_u31_mul() {
+        let mut prng = ChaCha20Rng::seed_from_u64(0u64);
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_m31 = a % M31::MOD;
+            let b_m31 = b % M31::MOD;
+            let prod_m31 = ((((a_m31 as u64) * (b_m31 as u64)) % (M31::MOD as u64)) & 0xffffffff) as u32;
+
+            let script = script! {
+                { a_m31 }
+                { b_m31 }
+                { u31_mul::<M31>() }
+                { prod_m31 }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_babybear = a % BabyBear::MOD;
+            let b_babybear = b % BabyBear::MOD;
+            let prod_babybear = ((((a_babybear as u64) * (b_babybear as u64)) % (BabyBear::MOD as u64)) & 0xffffffff) as u32;
+
+            let script = script! {
+                { a_babybear }
+                { b_babybear }
+                { u31_mul::<BabyBear>() }
+                { prod_babybear }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success)
+        }
+    }
+}

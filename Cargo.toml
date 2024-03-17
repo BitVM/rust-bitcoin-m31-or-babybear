@@ -1,0 +1,12 @@
+[package]
+name = "rust-bitcoin-u31-or-u30"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bitcoin-script = { git = "https://github.com/BitVM/rust-bitcoin-script" }
+bitcoin = { git = "https://github.com/stevenroose/rust-bitcoin", rev = "639d552ef0080a68b1ea883298aa30c450d9ff0d" }
+bitcoin-scriptexec = { git = "https://github.com/BitVM/rust-bitcoin-scriptexec/" }
+
+rand_chacha = "0.3.1"
+rand = "0.8.5"
