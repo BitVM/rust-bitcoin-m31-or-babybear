@@ -3,6 +3,7 @@ use bitcoin_script::define_pushable;
 use bitcoin_scriptexec::{Exec, ExecCtx, ExecutionResult, Options, TxTemplate};
 
 mod u31;
+mod u31_ext;
 
 define_pushable!();
 

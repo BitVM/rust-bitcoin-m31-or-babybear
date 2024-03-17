@@ -2,21 +2,21 @@ use bitcoin::{ScriptBuf as Script};
 use bitcoin_script::{bitcoin_script as script};
 use crate::{pushable, execute_script, unroll};
 
-pub trait U31 {
+pub trait U31Config {
     const MOD: u32;
 }
 
 pub struct M31;
-impl U31 for M31 {
+impl U31Config for M31 {
     const MOD: u32 = (1 << 31) - 1;
 }
 
 pub struct BabyBear;
-impl U31 for BabyBear {
+impl U31Config for BabyBear {
     const MOD: u32 = 15 * (1 << 27) + 1;
 }
 
-fn u31_adjust<M: U31>() -> Script {
+fn u31_adjust<M: U31Config>() -> Script {
     script! {
         OP_DUP
         0 OP_LESSTHAN
@@ -24,7 +24,7 @@ fn u31_adjust<M: U31>() -> Script {
     }
 }
 
-pub fn u31_add<M: U31>() -> Script {
+pub fn u31_add<M: U31Config>() -> Script {
     script! {
         { M::MOD } OP_SUB
         OP_ADD
@@ -32,14 +32,14 @@ pub fn u31_add<M: U31>() -> Script {
     }
 }
 
-pub fn u31_double<M: U31>() -> Script {
+pub fn u31_double<M: U31Config>() -> Script {
     script! {
         OP_DUP
         { u31_add::<M>() }
     }
 }
 
-pub fn u31_sub<M: U31>() -> Script {
+pub fn u31_sub<M: U31Config>() -> Script {
     script! {
         OP_SUB
         { u31_adjust::<M>() }
@@ -62,7 +62,7 @@ pub fn u31_to_bits() -> Script {
     }
 }
 
-pub fn u31_mul<M: U31>() -> Script {
+pub fn u31_mul<M: U31Config>() -> Script {
     script! {
         u31_to_bits
         0 OP_TOALTSTACK
