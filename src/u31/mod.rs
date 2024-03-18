@@ -1,19 +1,15 @@
-use bitcoin::{ScriptBuf as Script};
-use bitcoin_script::{bitcoin_script as script};
-use crate::{pushable, execute_script, unroll};
+use crate::{pushable, unroll};
+use bitcoin::ScriptBuf as Script;
+use bitcoin_script::bitcoin_script as script;
+
+mod m31;
+pub use m31::*;
+
+mod babybear;
+pub use babybear::*;
 
 pub trait U31Config {
     const MOD: u32;
-}
-
-pub struct M31;
-impl U31Config for M31 {
-    const MOD: u32 = (1 << 31) - 1;
-}
-
-pub struct BabyBear;
-impl U31Config for BabyBear {
-    const MOD: u32 = 15 * (1 << 27) + 1;
 }
 
 fn u31_adjust<M: U31Config>() -> Script {
@@ -91,14 +87,15 @@ pub fn u31_mul<M: U31Config>() -> Script {
 
 #[cfg(test)]
 mod test {
-    use rand_chacha::ChaCha20Rng;
     use rand::{Rng, SeedableRng};
+    use rand_chacha::ChaCha20Rng;
 
     use super::*;
 
     #[test]
     fn test_u31_add() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
+        println!("add: {}", u31_add::<BabyBear>().len());
 
         for _ in 0..100 {
             let a: u32 = prng.gen();
@@ -142,6 +139,7 @@ mod test {
     #[test]
     fn test_u31_sub() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
+        println!("sub: {}", u31_sub::<BabyBear>().len());
 
         for _ in 0..100 {
             let a: u32 = prng.gen();
@@ -239,13 +237,16 @@ mod test {
     fn test_u31_mul() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
+        println!("mul: {}", u31_mul::<BabyBear>().len());
+
         for _ in 0..100 {
             let a: u32 = prng.gen();
             let b: u32 = prng.gen();
 
             let a_m31 = a % M31::MOD;
             let b_m31 = b % M31::MOD;
-            let prod_m31 = ((((a_m31 as u64) * (b_m31 as u64)) % (M31::MOD as u64)) & 0xffffffff) as u32;
+            let prod_m31 =
+                ((((a_m31 as u64) * (b_m31 as u64)) % (M31::MOD as u64)) & 0xffffffff) as u32;
 
             let script = script! {
                 { a_m31 }
@@ -264,7 +265,9 @@ mod test {
 
             let a_babybear = a % BabyBear::MOD;
             let b_babybear = b % BabyBear::MOD;
-            let prod_babybear = ((((a_babybear as u64) * (b_babybear as u64)) % (BabyBear::MOD as u64)) & 0xffffffff) as u32;
+            let prod_babybear = ((((a_babybear as u64) * (b_babybear as u64))
+                % (BabyBear::MOD as u64))
+                & 0xffffffff) as u32;
 
             let script = script! {
                 { a_babybear }

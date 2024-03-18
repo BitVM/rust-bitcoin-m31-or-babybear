@@ -1,16 +1,19 @@
-use bitcoin::{TapLeafHash, Transaction, hashes::Hash};
+use bitcoin::{hashes::Hash, TapLeafHash, Transaction};
 use bitcoin_script::define_pushable;
 use bitcoin_scriptexec::{Exec, ExecCtx, ExecutionResult, Options, TxTemplate};
 
 mod u31;
+pub use u31::*;
+
 mod u31_ext;
+pub use u31_ext::*;
 
 define_pushable!();
 
 pub fn unroll<F, T>(count: u32, mut closure: F) -> Vec<T>
-    where
-        F: FnMut(u32) -> T,
-        T: pushable::Pushable,
+where
+    F: FnMut(u32) -> T,
+    T: pushable::Pushable,
 {
     let mut result = vec![];
 
@@ -38,7 +41,7 @@ pub fn execute_script(script: bitcoin::ScriptBuf) -> ExecutionResult {
         script,
         vec![],
     )
-        .expect("error creating exec");
+    .expect("error creating exec");
 
     loop {
         if exec.exec_next().is_err() {
