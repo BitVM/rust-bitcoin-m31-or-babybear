@@ -9,10 +9,15 @@ The overhead for field extension is, however, very different, since M31's field 
 
 - addition: 18 weight units
 - subtraction: 12 weight units
-- multiplication: 1767 weight units
+- multiplication: 1736 weight units
 
 For the degree-4 extension of BabyBear over x^4 - 11, we have:
 
 - addition: 84 weight units
 - subtraction: 63 weight units
 - multiplication: 21992 weight units
+
+### Credits
+
+Thanks to Robin Linus for pointing out an optimization that reduces the multiplication from 1767 to 1736 (`1 OP_ROLL` is 
+equivalent to `OP_SWAP`).

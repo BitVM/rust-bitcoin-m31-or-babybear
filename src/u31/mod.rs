@@ -64,7 +64,7 @@ pub fn u31_mul<M: U31Config>() -> Script {
         0 OP_TOALTSTACK
         31 OP_ROLL
         {unroll(30, |_| script! {
-            1 OP_ROLL
+            OP_SWAP
             OP_IF
                 OP_DUP
                 OP_FROMALTSTACK
@@ -73,7 +73,7 @@ pub fn u31_mul<M: U31Config>() -> Script {
             OP_ENDIF
             { u31_double::<M>() }
         })}
-        1 OP_ROLL
+        OP_SWAP
         OP_IF
             OP_FROMALTSTACK
             { u31_add::<M>() }
@@ -89,6 +89,7 @@ pub fn u31_mul<M: U31Config>() -> Script {
 mod test {
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
+    use crate::execute_script;
 
     use super::*;
 

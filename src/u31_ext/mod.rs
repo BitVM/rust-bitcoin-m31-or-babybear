@@ -88,8 +88,7 @@ mod test {
     #[test]
     fn test_u31ext_add() {
         let mut rng = ChaCha20Rng::seed_from_u64(0u64);
-
-        println!("ext add: {}", u31ext_add::<BabyBear4>().len());
+        // println!("ext add: {}", u31ext_add::<BabyBear4>().len());
 
         let a = rng.gen::<F>();
         let b = rng.gen::<F>();
@@ -136,7 +135,7 @@ mod test {
     #[test]
     fn test_u31ext_sub() {
         let mut rng = ChaCha20Rng::seed_from_u64(0u64);
-        println!("ext sub: {}", u31ext_sub::<BabyBear4>().len());
+        // println!("ext sub: {}", u31ext_sub::<BabyBear4>().len());
 
         let a = rng.gen::<F>();
         let b = rng.gen::<F>();
@@ -161,7 +160,7 @@ mod test {
     #[test]
     fn test_u31ext_mul() {
         let mut rng = ChaCha20Rng::seed_from_u64(0u64);
-        println!("ext mul: {}", u31ext_mul::<BabyBear4>().len());
+        // println!("ext mul: {}", u31ext_mul::<BabyBear4>().len());
 
         let a = rng.gen::<F>();
         let b = rng.gen::<F>();
