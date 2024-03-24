@@ -61,26 +61,39 @@ pub fn u31_to_bits() -> Script {
 pub fn u31_mul<M: U31Config>() -> Script {
     script! {
         u31_to_bits
-        0 OP_TOALTSTACK
-        31 OP_ROLL
-        {unroll(30, |_| script! {
-            OP_SWAP
-            OP_IF
-                OP_DUP
-                OP_FROMALTSTACK
-                { u31_add::<M>() }
-                OP_TOALTSTACK
-            OP_ENDIF
+        { unroll(31, |_| script! {
+            OP_TOALTSTACK
+        }) }
+        0
+        OP_SWAP
+        OP_DUP
+        { u31_double::<M>() }
+        OP_2DUP
+        { u31_add::<M>() }
+        0
+        OP_FROMALTSTACK
+        OP_IF
+            3 OP_PICK
+            { u31_add::<M>() }
+        OP_ENDIF
+        { u31_double::<M>() }
+        { u31_double::<M>() }
+        { unroll(14, |_| script! {
+            OP_FROMALTSTACK
+            OP_FROMALTSTACK
+            OP_SWAP OP_DUP OP_ADD OP_ADD
+            4 OP_SWAP OP_SUB OP_PICK
+            { u31_add::<M>() }
+            { u31_double::<M>() }
             { u31_double::<M>() }
         })}
-        OP_SWAP
-        OP_IF
-            OP_FROMALTSTACK
-            { u31_add::<M>() }
-            OP_TOALTSTACK
-        OP_ELSE
-            OP_DROP
-        OP_ENDIF
+        OP_FROMALTSTACK
+        OP_FROMALTSTACK
+        OP_SWAP OP_DUP OP_ADD OP_ADD
+        4 OP_SWAP OP_SUB OP_PICK
+        { u31_add::<M>() }
+        OP_TOALTSTACK
+        OP_2DROP OP_2DROP
         OP_FROMALTSTACK
     }
 }
@@ -236,7 +249,7 @@ mod test {
 
     #[test]
     fn test_u31_mul() {
-        let mut prng = ChaCha20Rng::seed_from_u64(0u64);
+        let mut prng = ChaCha20Rng::seed_from_u64(6u64);
         eprintln!("u31 mul: {}", u31_mul::<BabyBear>().len());
 
         for _ in 0..100 {
