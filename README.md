@@ -25,8 +25,8 @@ For the degree-4 extension of M31 using y^2 - 2 - i over the complex field x^2 +
 
 ### Credits
 
-Thanks to Robin Linus for pointing out an optimization that reduces the multiplication from 1767 to 1736 (`1 OP_ROLL` is 
+Thanks to [Robin Linus](https://robinlinus.com/) for pointing out an optimization that reduces the multiplication from 1767 to 1736 (`1 OP_ROLL` is 
 equivalent to `OP_SWAP`). 
 
-Thanks to Shahar Papini for pointing out that double Karatsuba can improve the performance for QM31, which also works for 
+Thanks to [Shahar Papini](https://twitter.com/PapiniShahar) from Starkware for pointing out that double Karatsuba can improve the performance for QM31, which also works for 
 BabyBear4.
