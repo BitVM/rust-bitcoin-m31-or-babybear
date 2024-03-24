@@ -1,6 +1,6 @@
 ## rust-bitcoin-m31-or-babybear
 
-This repository implements the Bitcoin script for processing the M31 or BabyBear field.
+This repository implements M31 and BabyBear field arithmetic in Bitcoin Script.
 
 ### Performance
 
