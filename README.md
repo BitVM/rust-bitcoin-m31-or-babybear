@@ -29,4 +29,4 @@ Thanks to [Robin Linus](https://robinlinus.com/) for pointing out an optimizatio
 equivalent to `OP_SWAP`). 
 
 Thanks to [Shahar Papini](https://twitter.com/PapiniShahar) from Starkware for pointing out that double Karatsuba can improve the performance for QM31, which also works for 
-BabyBear4, which reduces the multiplication cost down from 21992 to 16483 for BabyBear.
+BabyBear4 and reduces the multiplication cost down from 21992 to 16483 for BabyBear.
