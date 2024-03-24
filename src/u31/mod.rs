@@ -87,16 +87,16 @@ pub fn u31_mul<M: U31Config>() -> Script {
 
 #[cfg(test)]
 mod test {
+    use crate::execute_script;
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
-    use crate::execute_script;
 
     use super::*;
 
     #[test]
     fn test_u31_add() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
-        println!("add: {}", u31_add::<BabyBear>().len());
+        eprintln!("u31 add: {}", u31_add::<BabyBear>().len());
 
         for _ in 0..100 {
             let a: u32 = prng.gen();
@@ -140,7 +140,7 @@ mod test {
     #[test]
     fn test_u31_sub() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
-        println!("sub: {}", u31_sub::<BabyBear>().len());
+        eprintln!("u31 sub: {}", u31_sub::<BabyBear>().len());
 
         for _ in 0..100 {
             let a: u32 = prng.gen();
@@ -237,8 +237,7 @@ mod test {
     #[test]
     fn test_u31_mul() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
-
-        println!("mul: {}", u31_mul::<BabyBear>().len());
+        eprintln!("u31 mul: {}", u31_mul::<BabyBear>().len());
 
         for _ in 0..100 {
             let a: u32 = prng.gen();
