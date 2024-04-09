@@ -42,6 +42,14 @@ pub fn u31_sub<M: U31Config>() -> Script {
     }
 }
 
+pub fn u31_neg<M: U31Config>() -> Script {
+    script! {
+        { M::MOD }
+        OP_SWAP
+        OP_SUB
+    }
+}
+
 pub fn u31_to_bits() -> Script {
     script! {
         {
@@ -291,6 +299,28 @@ mod test {
             };
             let exec_result = execute_script(script);
             assert!(exec_result.success)
+        }
+    }
+
+    #[test]
+    fn test_u31_neg() {
+        let mut prng = ChaCha20Rng::seed_from_u64(6u64);
+        eprintln!("u31 neg: {}", u31_neg::<M31>().len());
+
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+
+            let a_m31 = a % M31::MOD;
+            let b_m31 = M31::MOD - a_m31;
+
+            let script = script! {
+                { a_m31 }
+                { u31_neg::<M31>() }
+                { b_m31 }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
         }
     }
 }
