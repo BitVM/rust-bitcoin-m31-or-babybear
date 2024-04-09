@@ -1,7 +1,7 @@
 use crate::pushable;
 use crate::{u31_add, u31_mul, u31_sub, U31Config};
 use bitcoin::ScriptBuf as Script;
-use bitcoin_script::bitcoin_script as script;
+use bitcoin_script::script;
 
 // Input: A1 B1 A2 B2
 // Output:
@@ -101,7 +101,7 @@ pub fn karatsuba_big<M: U31Config>() -> Script {
 mod test {
     use crate::{execute_script, karatsuba_small, BabyBear};
     use crate::{karatsuba_big, pushable};
-    use bitcoin_script::bitcoin_script as script;
+    use bitcoin_script::script;
     use core::ops::{Add, Mul};
     use p3_baby_bear::BabyBear as P3BabyBear;
     use p3_field::PrimeField32;

@@ -1,7 +1,7 @@
 use crate::pushable;
 use crate::{karatsuba_complex_big, u31_add, u31_double, u31_sub, U31ExtConfig, M31};
 use bitcoin::ScriptBuf as Script;
-use bitcoin_script::bitcoin_script as script;
+use bitcoin_script::script;
 
 pub struct QM31;
 

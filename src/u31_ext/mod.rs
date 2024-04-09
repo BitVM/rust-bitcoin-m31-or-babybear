@@ -1,6 +1,6 @@
 use crate::{pushable, unroll};
 use bitcoin::ScriptBuf as Script;
-use bitcoin_script::bitcoin_script as script;
+use bitcoin_script::script;
 
 mod babybear;
 pub use babybear::*;

@@ -2,7 +2,7 @@ use crate::u31::{u31_add, u31_double, BabyBear};
 use crate::U31ExtConfig;
 use crate::{karatsuba_big, pushable};
 use bitcoin::ScriptBuf as Script;
-use bitcoin_script::bitcoin_script as script;
+use bitcoin_script::script;
 
 pub struct BabyBear4;
 
