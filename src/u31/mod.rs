@@ -12,26 +12,26 @@ pub trait U31Config {
     const MOD: u32;
 }
 
-fn u31_to_v31<M: U31Config>() -> Script {
+pub fn u31_to_v31<M: U31Config>() -> Script {
     script! {
         { M::MOD } OP_SUB
     }
 }
 
-fn v31_to_u31<M: U31Config>() -> Script {
+pub fn v31_to_u31<M: U31Config>() -> Script {
     script! {
         { M::MOD } OP_ADD
     }
 }
 
-fn u31_add_v31<M: U31Config>() -> Script {
+pub fn u31_add_v31<M: U31Config>() -> Script {
     script! {
         OP_ADD
         { u31_adjust::<M>() }
     }
 }
 
-fn v31_add_u31<M: U31Config>() -> Script {
+pub fn v31_add_u31<M: U31Config>() -> Script {
     script! {
         OP_ADD
         { v31_adjust::<M>() }
