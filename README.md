@@ -9,19 +9,19 @@ The overhead for field extension is slightly different due to the extension poly
 
 - addition: 18 weight units
 - subtraction: 12 weight units
-- multiplication: 1505 weight units
+- multiplication: 1415 weight units
 
 For the degree-4 extension of BabyBear over x^4 - 11, we have:
 
 - addition: 84 weight units
 - subtraction: 63 weight units
-- multiplication: 14404 weight units
+- multiplication: 13594 weight units
 
 For the degree-4 extension of M31 using y^2 - 2 - i over the complex field x^2 + 1, we have:
 
 - addition: 84 weight units
 - subtraction: 63 weight units
-- multiplication: 14131 weight units
+- multiplication: 13321 weight units
 
 ### Credits
 
@@ -29,6 +29,8 @@ Thanks to [Robin Linus](https://robinlinus.com/) for pointing out an optimizatio
 equivalent to `OP_SWAP`). 
 
 Thanks to [Shahar Papini](https://twitter.com/PapiniShahar) from Starkware for pointing out that double Karatsuba can improve the performance for QM31, which also works for 
-BabyBear4 and reduces the multiplication cost down from 21992 to 16483 for BabyBear.
+BabyBear4 and reduces the multiplication cost down from 21992 to 16483 for BabyBear4.
 
-A windowing method is used to reduce the multiplication overhead further, but it was not as powerful as expected.
+A windowing method is used to reduce the multiplication overhead further, making it from 16483 to 14404 for BabyBear4, but it was not as powerful as expected.
+
+The introduction of a dual form, `v31`, for which `u31 + v31` are more efficient than `u31 + u31` or `v31 + v31`, brings the cost from 14404 to 13594 for BabyBear4.

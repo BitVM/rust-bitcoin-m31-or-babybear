@@ -12,6 +12,32 @@ pub trait U31Config {
     const MOD: u32;
 }
 
+fn u31_to_v31<M: U31Config>() -> Script {
+    script! {
+        { M::MOD } OP_SUB
+    }
+}
+
+fn v31_to_u31<M: U31Config>() -> Script {
+    script! {
+        { M::MOD } OP_ADD
+    }
+}
+
+fn u31_add_v31<M: U31Config>() -> Script {
+    script! {
+        OP_ADD
+        { u31_adjust::<M>() }
+    }
+}
+
+fn v31_add_u31<M: U31Config>() -> Script {
+    script! {
+        OP_ADD
+        { v31_adjust::<M>() }
+    }
+}
+
 fn u31_adjust<M: U31Config>() -> Script {
     script! {
         OP_DUP
@@ -20,11 +46,25 @@ fn u31_adjust<M: U31Config>() -> Script {
     }
 }
 
+fn v31_adjust<M: U31Config>() -> Script {
+    script! {
+        OP_DUP
+        0 OP_GREATERTHANOREQUAL
+        OP_IF { M::MOD } OP_SUB OP_ENDIF
+    }
+}
+
 pub fn u31_add<M: U31Config>() -> Script {
     script! {
-        { M::MOD } OP_SUB
-        OP_ADD
-        { u31_adjust::<M>() }
+        { u31_to_v31::<M>() }
+        { u31_add_v31::<M>() }
+    }
+}
+
+pub fn v31_add<M: U31Config>() -> Script {
+    script! {
+        { v31_to_u31::<M>() }
+        { v31_add_u31::<M>() }
     }
 }
 
@@ -35,6 +75,13 @@ pub fn u31_double<M: U31Config>() -> Script {
     }
 }
 
+pub fn v31_double<M: U31Config>() -> Script {
+    script! {
+        OP_DUP
+        { v31_add::<M>() }
+    }
+}
+
 pub fn u31_sub<M: U31Config>() -> Script {
     script! {
         OP_SUB
@@ -42,9 +89,24 @@ pub fn u31_sub<M: U31Config>() -> Script {
     }
 }
 
+pub fn v31_sub<M: U31Config>() -> Script {
+    script! {
+        OP_SUB
+        { v31_adjust::<M>() }
+    }
+}
+
 pub fn u31_neg<M: U31Config>() -> Script {
     script! {
         { M::MOD }
+        OP_SWAP
+        OP_SUB
+    }
+}
+
+pub fn v31_neg<M: U31Config>() -> Script {
+    script! {
+        { -(M::MOD as i64) }
         OP_SWAP
         OP_SUB
     }
@@ -74,15 +136,16 @@ pub fn u31_mul<M: U31Config>() -> Script {
         }) }
         0
         OP_SWAP
+        { u31_to_v31::<M>() }
         OP_DUP
-        { u31_double::<M>() }
+        { v31_double::<M>() }
         OP_2DUP
-        { u31_add::<M>() }
+        { v31_add::<M>() }
         0
         OP_FROMALTSTACK
         OP_IF
             3 OP_PICK
-            { u31_add::<M>() }
+            { u31_add_v31::<M>() }
         OP_ENDIF
         { u31_double::<M>() }
         { u31_double::<M>() }
@@ -91,7 +154,7 @@ pub fn u31_mul<M: U31Config>() -> Script {
             OP_FROMALTSTACK
             OP_SWAP OP_DUP OP_ADD OP_ADD
             4 OP_SWAP OP_SUB OP_PICK
-            { u31_add::<M>() }
+            { u31_add_v31::<M>() }
             { u31_double::<M>() }
             { u31_double::<M>() }
         })}
@@ -99,7 +162,7 @@ pub fn u31_mul<M: U31Config>() -> Script {
         OP_FROMALTSTACK
         OP_SWAP OP_DUP OP_ADD OP_ADD
         4 OP_SWAP OP_SUB OP_PICK
-        { u31_add::<M>() }
+        { u31_add_v31::<M>() }
         OP_TOALTSTACK
         OP_2DROP OP_2DROP
         OP_FROMALTSTACK
