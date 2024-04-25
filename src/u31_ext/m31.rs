@@ -33,7 +33,7 @@ impl U31ExtConfig for QM31 {
 
 #[cfg(test)]
 mod test {
-    use crate::{u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_sub};
+    use crate::{u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31, u31ext_mul_u31_by_constant, u31ext_sub};
     use bitvm::treepp::*;
     use core::ops::{Add, Mul, Neg};
     use p3_field::extension::Complex;
@@ -173,5 +173,83 @@ mod test {
         };
         let exec_result = execute_script(script);
         assert!(exec_result.success);
+    }
+
+    #[test]
+    fn test_u31ext_mul_u31() {
+        let mul_script = u31ext_mul_u31::<QM31>();
+
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+        eprintln!("qm31 mul_by_m31: {}", mul_script.len());
+
+        let a = rng.gen::<F>();
+        let b = rng.gen::<p3_mersenne_31::Mersenne31>();
+
+        let c = a * F::new(
+            Complex::<p3_mersenne_31::Mersenne31>::new(b, p3_mersenne_31::Mersenne31::zero()),
+            Complex::<p3_mersenne_31::Mersenne31>::zero(),
+        );
+
+        let a: &[Complex<p3_mersenne_31::Mersenne31>] = a.as_base_slice();
+        let c: &[Complex<p3_mersenne_31::Mersenne31>] = c.as_base_slice();
+
+        let script = script! {
+            { a[1].imag().as_canonical_u32() }
+            { a[1].real().as_canonical_u32() }
+            { a[0].imag().as_canonical_u32() }
+            { a[0].real().as_canonical_u32() }
+            { b.as_canonical_u32() }
+            { mul_script.clone() }
+            { c[1].imag().as_canonical_u32() }
+            { c[1].real().as_canonical_u32() }
+            { c[0].imag().as_canonical_u32() }
+            { c[0].real().as_canonical_u32() }
+            { u31ext_equalverify::<QM31>() }
+            OP_TRUE
+        };
+
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
+    }
+
+    #[test]
+    fn test_u31ext_mul_u31_by_constant() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+        let mut total_len = 0;
+
+        for _ in 0..100 {
+            let a = rng.gen::<F>();
+            let b = rng.gen::<p3_mersenne_31::Mersenne31>();
+
+            let mul_script = u31ext_mul_u31_by_constant::<QM31>(b.as_canonical_u32());
+            total_len += mul_script.len();
+
+            let c = a * F::new(
+                Complex::<p3_mersenne_31::Mersenne31>::new(b, p3_mersenne_31::Mersenne31::zero()),
+                Complex::<p3_mersenne_31::Mersenne31>::zero(),
+            );
+
+            let a: &[Complex<p3_mersenne_31::Mersenne31>] = a.as_base_slice();
+            let c: &[Complex<p3_mersenne_31::Mersenne31>] = c.as_base_slice();
+
+            let script = script! {
+                { a[1].imag().as_canonical_u32() }
+                { a[1].real().as_canonical_u32() }
+                { a[0].imag().as_canonical_u32() }
+                { a[0].real().as_canonical_u32() }
+                { mul_script.clone() }
+                { c[1].imag().as_canonical_u32() }
+                { c[1].real().as_canonical_u32() }
+                { c[0].imag().as_canonical_u32() }
+                { c[0].real().as_canonical_u32() }
+                { u31ext_equalverify::<QM31>() }
+                OP_TRUE
+            };
+
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        eprintln!("qm31 mul_by_m31_by_constant: {}", total_len as f64 / 100.0);
     }
 }

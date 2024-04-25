@@ -49,7 +49,7 @@ impl U31ExtConfig for BabyBear4 {
 
 #[cfg(test)]
 mod test {
-    use crate::{u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_sub};
+    use crate::{QM31, u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31, u31ext_mul_u31_by_constant, u31ext_sub};
     use bitvm::treepp::*;
     use core::ops::{Add, Mul, Neg};
     use p3_field::{AbstractExtensionField, AbstractField, PrimeField32};
@@ -155,5 +155,65 @@ mod test {
         };
         let exec_result = execute_script(script);
         assert!(exec_result.success);
+    }
+
+    #[test]
+    fn test_u31ext_mul_u31() {
+        let mul_script = u31ext_mul_u31::<BabyBear4>();
+
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+        eprintln!("babybear4 mul_by_babybear: {}", mul_script.len());
+
+        let a = rng.gen::<F>();
+        let b = rng.gen::<p3_baby_bear::BabyBear>();
+
+        let c = a * F::from_base(b);
+
+        let a: &[p3_baby_bear::BabyBear] = a.as_base_slice();
+        let c: &[p3_baby_bear::BabyBear] = c.as_base_slice();
+
+        let script = script! {
+            { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
+            { b.as_canonical_u32() }
+            { mul_script.clone() }
+            { c[3].as_canonical_u32() } { c[2].as_canonical_u32() } { c[1].as_canonical_u32() } { c[0].as_canonical_u32() }
+            { u31ext_equalverify::<BabyBear4>() }
+            OP_TRUE
+        };
+
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
+    }
+
+    #[test]
+    fn test_u31ext_mul_u31_by_constant() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+        let mut total_len = 0;
+
+        for _ in 0..100 {
+            let a = rng.gen::<F>();
+            let b = rng.gen::<p3_baby_bear::BabyBear>();
+
+            let mul_script = u31ext_mul_u31_by_constant::<BabyBear4>(b.as_canonical_u32());
+            total_len += mul_script.len();
+
+            let c = a * F::from_base(b);
+
+            let a: &[p3_baby_bear::BabyBear] = a.as_base_slice();
+            let c: &[p3_baby_bear::BabyBear] = c.as_base_slice();
+
+            let script = script! {
+                { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
+                { mul_script.clone() }
+                { c[3].as_canonical_u32() } { c[2].as_canonical_u32() } { c[1].as_canonical_u32() } { c[0].as_canonical_u32() }
+                { u31ext_equalverify::<QM31>() }
+                OP_TRUE
+            };
+
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        eprintln!("qm31 mul_by_m31_by_constant: {}", total_len as f64 / 100.0);
     }
 }

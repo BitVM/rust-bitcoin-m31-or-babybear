@@ -16,6 +16,8 @@ p3-baby-bear = { git = "https://github.com/Plonky3/Plonky3" }
 p3-field = { git = "https://github.com/Plonky3/Plonky3" }
 p3-mersenne-31 = { git = "https://github.com/Plonky3/Plonky3" }
 
+ark-ff = "0.4.0"
+
 [profile.release]
 opt-level = 3
 lto = "thin"

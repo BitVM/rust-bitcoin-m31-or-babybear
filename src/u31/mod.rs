@@ -168,6 +168,80 @@ pub fn u31_mul<M: U31Config>() -> Script {
     }
 }
 
+pub fn u31_mul_by_constant<M :U31Config>(constant: u32) -> Script {
+    let mut naf = ark_ff::biginteger::arithmetic::find_naf(&[constant as u64]);
+
+    if naf.len() > 3 {
+        let len = naf.len();
+        if naf[len - 2] == 0 && naf[len - 3] == -1 {
+            naf[len - 3] = 1;
+            naf[len - 2] = 1;
+            naf.resize(len - 1, 0);
+        }
+    }
+
+    let mut cur = 0usize;
+    let mut script_bytes = vec![];
+
+    let double = u31_double::<M>();
+    while cur < naf.len() && naf[cur] == 0 {
+        script_bytes.extend_from_slice(double.as_bytes());
+        cur += 1;
+    }
+
+    if cur < naf.len() {
+        if naf[cur] == 1 {
+            script_bytes.extend_from_slice(&[0x76]); // OP_DUP
+            script_bytes.extend_from_slice(double.as_bytes());
+            cur += 1;
+        } else if naf[cur] == -1 {
+            script_bytes.extend_from_slice(
+                script! {
+                    OP_DUP { u31_neg::<M>() } OP_SWAP
+                }.as_bytes(),
+            );
+            script_bytes.extend_from_slice(double.as_bytes());
+            cur += 1;
+        } else {
+            unreachable!()
+        }
+    } else {
+        script_bytes.extend_from_slice(
+            script! {
+                OP_DROP { 0 }
+            }.as_bytes(),
+        );
+
+        return Script::from(script_bytes);
+    }
+
+    if cur < naf.len() {
+        while cur < naf.len() {
+            if naf[cur] == 0 {
+                script_bytes.extend_from_slice(double.as_bytes());
+            } else if naf[cur] == 1 {
+                script_bytes.extend_from_slice(script! {
+                    OP_SWAP OP_OVER { u31_add::<M>() } OP_SWAP
+                }.as_bytes());
+                if cur != naf.len() - 1 {
+                    script_bytes.extend_from_slice(double.as_bytes());
+                }
+            } else if naf[cur] == -1 {
+                script_bytes.extend_from_slice(script! {
+                    OP_SWAP OP_OVER { u31_sub::<M>() } OP_SWAP
+                }.as_bytes());
+                if cur != naf.len() - 1 {
+                    script_bytes.extend_from_slice(double.as_bytes());
+                }
+            }
+            cur += 1;
+        }
+    }
+
+    script_bytes.extend_from_slice(&[0x75]); // OP_DROP
+    Script::from(script_bytes)
+}
+
 #[cfg(test)]
 mod test {
     use bitvm::treepp::*;
@@ -362,6 +436,64 @@ mod test {
             let exec_result = execute_script(script);
             assert!(exec_result.success)
         }
+    }
+
+    #[test]
+    fn test_u31_mul_by_constant() {
+        let mut prng = ChaCha20Rng::seed_from_u64(6u64);
+
+        let mut total_len = 0;
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_m31 = a % M31::MOD;
+            let b_m31 = b % M31::MOD;
+
+            let mul_script = u31_mul_by_constant::<M31>(b_m31);
+            total_len += mul_script.len();
+
+            let prod_m31 =
+                ((((a_m31 as u64) * (b_m31 as u64)) % (M31::MOD as u64)) & 0xffffffff) as u32;
+
+            let script = script! {
+                { a_m31 }
+                { mul_script.clone() }
+                { prod_m31 }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        eprintln!("m31 mul_by_constant: {}", total_len as f64 / 100.0);
+
+        let mut total_len = 0;
+        for _ in 0..100 {
+            let a: u32 = prng.gen();
+            let b: u32 = prng.gen();
+
+            let a_babybear = a % BabyBear::MOD;
+            let b_babybear = b % BabyBear::MOD;
+
+            let mul_script = u31_mul_by_constant::<BabyBear>(b_babybear);
+            total_len += mul_script.len();
+
+            let prod_babybear = ((((a_babybear as u64) * (b_babybear as u64))
+                % (BabyBear::MOD as u64))
+                & 0xffffffff) as u32;
+
+            let script = script! {
+                { a_babybear }
+                { mul_script.clone() }
+                { prod_babybear }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success)
+        }
+
+        eprintln!("babybear mul_by_constant: {}", total_len as f64 / 100.0);
     }
 
     #[test]

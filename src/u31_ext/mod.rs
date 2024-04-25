@@ -1,4 +1,4 @@
-use crate::{u31_add_v31, u31_to_bits, u31_to_v31, unroll, v31_add, v31_double};
+use crate::{u31_add_v31, u31_mul_by_constant, u31_to_bits, u31_to_v31, unroll, v31_add, v31_double};
 use bitvm::treepp::*;
 
 mod babybear;
@@ -175,52 +175,21 @@ pub fn u31ext_mul_u31<C: U31ExtConfig>() -> Script {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::{u31ext_equalverify, u31ext_mul_u31, QM31};
-    use bitvm::treepp::*;
-    use p3_field::extension::Complex;
-    use p3_field::{AbstractExtensionField, AbstractField, PrimeField32};
-    use rand::{Rng, SeedableRng};
-    use rand_chacha::ChaCha20Rng;
 
-    type F4 = p3_field::extension::BinomialExtensionField<Complex<p3_mersenne_31::Mersenne31>, 2>;
-    type F = p3_mersenne_31::Mersenne31;
+pub fn u31ext_mul_u31_by_constant<C: U31ExtConfig>(constant: u32) -> Script {
+    // input stack:
+    //
+    // u31ext
+    // d, c, b, a
 
-    #[test]
-    fn test_u31ext_mul_u31() {
-        let mul_script = u31ext_mul_u31::<QM31>();
-
-        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
-        eprintln!("qm31 mul_by_m31: {}", u31ext_mul_u31::<QM31>().len());
-
-        let a = rng.gen::<F4>();
-        let b = rng.gen::<F>();
-
-        let c = a * F4::new(
-            Complex::<p3_mersenne_31::Mersenne31>::new(b, F::zero()),
-            Complex::<p3_mersenne_31::Mersenne31>::zero(),
-        );
-
-        let a: &[Complex<p3_mersenne_31::Mersenne31>] = a.as_base_slice();
-        let c: &[Complex<p3_mersenne_31::Mersenne31>] = c.as_base_slice();
-
-        let script = script! {
-            { a[1].imag().as_canonical_u32() }
-            { a[1].real().as_canonical_u32() }
-            { a[0].imag().as_canonical_u32() }
-            { a[0].real().as_canonical_u32() }
-            { b.as_canonical_u32() }
-            { mul_script.clone() }
-            { c[1].imag().as_canonical_u32() }
-            { c[1].real().as_canonical_u32() }
-            { c[0].imag().as_canonical_u32() }
-            { c[0].real().as_canonical_u32() }
-            { u31ext_equalverify::<QM31>() }
-            OP_TRUE
-        };
-
-        let exec_result = execute_script(script);
-        assert!(exec_result.success);
+    script! {
+        OP_TOALTSTACK OP_TOALTSTACK OP_TOALTSTACK
+        { u31_mul_by_constant::<C::BaseFieldConfig>(constant) }
+        OP_FROMALTSTACK
+        { u31_mul_by_constant::<C::BaseFieldConfig>(constant) }
+        OP_FROMALTSTACK
+        { u31_mul_by_constant::<C::BaseFieldConfig>(constant) }
+        OP_FROMALTSTACK
+        { u31_mul_by_constant::<C::BaseFieldConfig>(constant) }
     }
 }
