@@ -1,11 +1,10 @@
-use crate::{pushable, unroll};
-use bitcoin::ScriptBuf as Script;
-use bitcoin_script::script;
+use bitvm::treepp::*;
 
 mod m31;
 pub use m31::*;
 
 mod babybear;
+use crate::unroll;
 pub use babybear::*;
 
 pub trait U31Config {
@@ -171,7 +170,7 @@ pub fn u31_mul<M: U31Config>() -> Script {
 
 #[cfg(test)]
 mod test {
-    use crate::execute_script;
+    use bitvm::treepp::*;
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
 
