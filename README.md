@@ -48,5 +48,5 @@ element. But our attempts show that it is slower than this naive approach (which
 already uses a lookup table). 
 
 In case one of the multipliers is a constant, we can have more efficient multiplication using a relaxed NAF representation, 
-which saves from 1415 down to ~738 for BabyBear on degree-1 element multiplication in this special case. We use "~" to 
+which saves from 1415 down to \~738 for BabyBear on degree-1 element multiplication in this special case. We use "\~" to 
 emphasize that this cost is variable and depends on the constant.
