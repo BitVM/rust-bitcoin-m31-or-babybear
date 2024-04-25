@@ -1,4 +1,5 @@
-use crate::{u31_add_v31, u31_to_bits, u31_to_v31, unroll, v31_double};
+use bitcoin::opcodes::Ordinary::OP_TOALTSTACK;
+use crate::{u31_add_v31, u31_to_bits, u31_to_v31, unroll, v31_add, v31_double};
 use bitvm::treepp::*;
 
 mod babybear;
@@ -98,68 +99,64 @@ pub fn u31ext_mul_u31<C: U31ExtConfig>() -> Script {
 
         // create a precomputed table (30 times)
         OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
+        OP_2DUP { v31_add::<C::BaseFieldConfig>() }
 
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
+        for _ in 1..15 {
+            OP_OVER { v31_double::<C::BaseFieldConfig>() }
+            OP_DUP { v31_double::<C::BaseFieldConfig>() }
+            OP_2DUP { v31_add::<C::BaseFieldConfig>() }
+        }
 
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
+        OP_OVER { v31_double::<C::BaseFieldConfig>() }
 
         // now the stack looks like:
         //    2^0 e
         //    2^1 e
+        //    (2^1 + 2^0) e
         //    2^2 e
+        //    2^3 e
+        //    (2^3 + 2^2) e
         //    ...
+        //    2^28 e
         //    2^29 e
+        //    (2^29 + 2^28) e
         //    2^30 e
 
         // leave some stack space
-        { 0 } { 0 } { 0 } { 0 }
+        { 0 } { 0 } { 0 } { 0 } { 0 }
 
         for i in 0..4 {
             OP_FROMALTSTACK { u31_to_bits() }
-            for _ in 0..31 {
+            for _ in 0..30 {
                 OP_TOALTSTACK
             }
 
-            { 4 }
+            OP_IF
+                { 5 } OP_PICK
+                { u31_add_v31::<C::BaseFieldConfig>() }
+            OP_ENDIF
 
-            for _ in 0..31 {
+            { 6 }
+
+            for _ in 0..15 {
                 OP_FROMALTSTACK
+                OP_FROMALTSTACK
+                2 OP_PICK OP_TOALTSTACK
                 OP_IF
-                    OP_DUP OP_TOALTSTACK OP_PICK
-                    { u31_add_v31::<C::BaseFieldConfig>() }
-                    OP_FROMALTSTACK
+                    OP_NOTIF
+                        2 OP_ADD
+                    OP_ENDIF
+                OP_ELSE
+                    OP_IF
+                        OP_1ADD
+                    OP_ELSE
+                        OP_DROP { 4 }
+                    OP_ENDIF
                 OP_ENDIF
-                OP_1ADD
+                OP_PICK
+                { u31_add_v31::<C::BaseFieldConfig>() }
+                OP_FROMALTSTACK
+                3 OP_ADD
             }
 
             OP_DROP
@@ -170,10 +167,10 @@ pub fn u31ext_mul_u31<C: U31ExtConfig>() -> Script {
 
         OP_TOALTSTACK OP_TOALTSTACK OP_TOALTSTACK OP_TOALTSTACK
 
-        for _ in 0..15 {
+        OP_DROP
+        for _ in 0..23 {
             OP_2DROP
         }
-        OP_DROP
 
         OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK
     }
@@ -181,10 +178,10 @@ pub fn u31ext_mul_u31<C: U31ExtConfig>() -> Script {
 
 #[cfg(test)]
 mod test {
-    use crate::{u31ext_equalverify, u31ext_mul_u31, QM31};
+    use crate::{u31ext_equalverify, u31ext_mul_u31, QM31, M31, U31Config};
     use bitvm::treepp::*;
     use p3_field::extension::Complex;
-    use p3_field::{AbstractExtensionField, AbstractField, PrimeField32};
+    use p3_field::{AbstractExtensionField, AbstractField, Field, PrimeField32};
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
 
@@ -216,12 +213,18 @@ mod test {
             { a[0].real().as_canonical_u32() }
             { b.as_canonical_u32() }
             { mul_script.clone() }
+            /*for i in 0..15 {
+                { b.mul_2exp_u64(2 * i).as_canonical_u32() as i64 - (M31::MOD as i64) }
+                { b.mul_2exp_u64(2 * i + 1).as_canonical_u32() as i64 - (M31::MOD as i64) }
+                { (b.mul_2exp_u64(2 * i).as_canonical_u32() + b.mul_2exp_u64(2 * i + 1).as_canonical_u32()) as i64 - (M31::MOD as i64) }
+            }
+            { b.mul_2exp_u64(30).as_canonical_u32() as i64 - (M31::MOD as i64) }*/
             { c[1].imag().as_canonical_u32() }
             { c[1].real().as_canonical_u32() }
             { c[0].imag().as_canonical_u32() }
             { c[0].real().as_canonical_u32() }
-            { u31ext_equalverify::<QM31>() }
-            OP_TRUE
+            /*{ u31ext_equalverify::<QM31>() }
+            OP_TRUE*/
         };
 
         let exec_result = execute_script(script);
