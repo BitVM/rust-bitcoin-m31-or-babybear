@@ -127,12 +127,8 @@ pub fn u31_to_bits() -> Script {
     }
 }
 
-pub fn u31_mul<M: U31Config>() -> Script {
+pub(crate) fn u31_mul_common<M: U31Config>() -> Script {
     script! {
-        u31_to_bits
-        { unroll(31, |_| script! {
-            OP_TOALTSTACK
-        }) }
         0
         OP_SWAP
         { u31_to_v31::<M>() }
@@ -168,7 +164,17 @@ pub fn u31_mul<M: U31Config>() -> Script {
     }
 }
 
-pub fn u31_mul_by_constant<M :U31Config>(constant: u32) -> Script {
+pub fn u31_mul<M: U31Config>() -> Script {
+    script! {
+        u31_to_bits
+        { unroll(31, |_| script! {
+            OP_TOALTSTACK
+        }) }
+        { u31_mul_common::<M>() }
+    }
+}
+
+pub fn u31_mul_by_constant<M: U31Config>(constant: u32) -> Script {
     let mut naf = ark_ff::biginteger::arithmetic::find_naf(&[constant as u64]);
 
     if naf.len() > 3 {
@@ -198,7 +204,8 @@ pub fn u31_mul_by_constant<M :U31Config>(constant: u32) -> Script {
             script_bytes.extend_from_slice(
                 script! {
                     OP_DUP { u31_neg::<M>() } OP_SWAP
-                }.as_bytes(),
+                }
+                .as_bytes(),
             );
             script_bytes.extend_from_slice(double.as_bytes());
             cur += 1;
@@ -209,7 +216,8 @@ pub fn u31_mul_by_constant<M :U31Config>(constant: u32) -> Script {
         script_bytes.extend_from_slice(
             script! {
                 OP_DROP { 0 }
-            }.as_bytes(),
+            }
+            .as_bytes(),
         );
 
         return Script::from(script_bytes);
@@ -220,16 +228,22 @@ pub fn u31_mul_by_constant<M :U31Config>(constant: u32) -> Script {
             if naf[cur] == 0 {
                 script_bytes.extend_from_slice(double.as_bytes());
             } else if naf[cur] == 1 {
-                script_bytes.extend_from_slice(script! {
-                    OP_SWAP OP_OVER { u31_add::<M>() } OP_SWAP
-                }.as_bytes());
+                script_bytes.extend_from_slice(
+                    script! {
+                        OP_SWAP OP_OVER { u31_add::<M>() } OP_SWAP
+                    }
+                    .as_bytes(),
+                );
                 if cur != naf.len() - 1 {
                     script_bytes.extend_from_slice(double.as_bytes());
                 }
             } else if naf[cur] == -1 {
-                script_bytes.extend_from_slice(script! {
-                    OP_SWAP OP_OVER { u31_sub::<M>() } OP_SWAP
-                }.as_bytes());
+                script_bytes.extend_from_slice(
+                    script! {
+                        OP_SWAP OP_OVER { u31_sub::<M>() } OP_SWAP
+                    }
+                    .as_bytes(),
+                );
                 if cur != naf.len() - 1 {
                     script_bytes.extend_from_slice(double.as_bytes());
                 }

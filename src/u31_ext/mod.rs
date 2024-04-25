@@ -1,4 +1,4 @@
-use crate::{u31_add_v31, u31_mul_by_constant, u31_to_bits, u31_to_v31, unroll, v31_add, v31_double};
+use crate::{u31_mul_by_constant, u31_to_bits, unroll};
 use bitvm::treepp::*;
 
 mod babybear;
@@ -13,7 +13,7 @@ pub use karatsuba::*;
 mod karatsuba_complex;
 pub use karatsuba_complex::*;
 
-use crate::u31::{u31_add, u31_double, u31_sub, U31Config};
+use crate::u31::{u31_add, u31_double, u31_mul_common, u31_sub, U31Config};
 
 pub trait U31ExtConfig {
     type BaseFieldConfig: U31Config;
@@ -88,93 +88,51 @@ pub fn u31ext_mul_u31<C: U31ExtConfig>() -> Script {
     // e
 
     script! {
-        // push a, b to altstack
-        OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK
+        { u31_to_bits() }
 
-        // push d, c to altstack
-        OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK
-
-        { u31_to_v31::<C::BaseFieldConfig>() }
-
-        // create a precomputed table (30 times)
-        OP_DUP { v31_double::<C::BaseFieldConfig>() }
-        OP_2DUP { v31_add::<C::BaseFieldConfig>() }
-
-        for _ in 1..15 {
-            OP_OVER { v31_double::<C::BaseFieldConfig>() }
-            OP_DUP { v31_double::<C::BaseFieldConfig>() }
-            OP_2DUP { v31_add::<C::BaseFieldConfig>() }
+        // duplicate 3 times
+        for _ in 0..31 {
+            30 OP_PICK
+        }
+        for _ in 0..31 {
+            OP_TOALTSTACK
         }
 
-        OP_OVER { v31_double::<C::BaseFieldConfig>() }
-
-        // now the stack looks like:
-        //    2^0 e
-        //    2^1 e
-        //    (2^1 + 2^0) e
-        //    2^2 e
-        //    2^3 e
-        //    (2^3 + 2^2) e
-        //    ...
-        //    2^28 e
-        //    2^29 e
-        //    (2^29 + 2^28) e
-        //    2^30 e
-
-        // leave some stack space
-        { 0 } { 0 } { 0 } { 0 } { 0 }
-
-        for i in 0..4 {
-            OP_FROMALTSTACK { u31_to_bits() }
-            for _ in 0..30 {
-                OP_TOALTSTACK
-            }
-
-            OP_IF
-                { 5 } OP_PICK
-                { u31_add_v31::<C::BaseFieldConfig>() }
-            OP_ENDIF
-
-            { 6 }
-
-            for _ in 0..15 {
-                OP_FROMALTSTACK
-                OP_FROMALTSTACK
-                2 OP_PICK OP_TOALTSTACK
-                OP_IF
-                    OP_NOTIF
-                        2 OP_ADD
-                    OP_ENDIF
-                OP_ELSE
-                    OP_IF
-                        OP_1ADD
-                    OP_ELSE
-                        OP_DROP { 4 }
-                    OP_ENDIF
-                OP_ENDIF
-                OP_PICK
-                { u31_add_v31::<C::BaseFieldConfig>() }
-                OP_FROMALTSTACK
-                3 OP_ADD
-            }
-
-            OP_DROP
-            if i != 3 {
-                3 OP_ROLL
-            }
+        for _ in 0..31 {
+            30 OP_PICK
+        }
+        for _ in 0..31 {
+            OP_TOALTSTACK
         }
 
-        OP_TOALTSTACK OP_TOALTSTACK OP_TOALTSTACK OP_TOALTSTACK
-
-        OP_DROP
-        for _ in 0..23 {
-            OP_2DROP
+        for _ in 0..31 {
+            30 OP_PICK
+        }
+        for _ in 0..31 {
+            OP_TOALTSTACK
         }
 
-        OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK
+        for _ in 0..31 {
+            OP_TOALTSTACK
+        }
+
+        // d
+        3 OP_ROLL
+        { u31_mul_common::<C::BaseFieldConfig>() }
+
+        // c
+        3 OP_ROLL
+        { u31_mul_common::<C::BaseFieldConfig>() }
+
+        // b
+        3 OP_ROLL
+        { u31_mul_common::<C::BaseFieldConfig>() }
+
+        // a
+        3 OP_ROLL
+        { u31_mul_common::<C::BaseFieldConfig>() }
     }
 }
-
 
 pub fn u31ext_mul_u31_by_constant<C: U31ExtConfig>(constant: u32) -> Script {
     // input stack:

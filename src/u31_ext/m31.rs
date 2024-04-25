@@ -33,7 +33,10 @@ impl U31ExtConfig for QM31 {
 
 #[cfg(test)]
 mod test {
-    use crate::{u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31, u31ext_mul_u31_by_constant, u31ext_sub};
+    use crate::{
+        u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31,
+        u31ext_mul_u31_by_constant, u31ext_sub,
+    };
     use bitvm::treepp::*;
     use core::ops::{Add, Mul, Neg};
     use p3_field::extension::Complex;

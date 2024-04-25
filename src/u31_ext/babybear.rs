@@ -49,7 +49,10 @@ impl U31ExtConfig for BabyBear4 {
 
 #[cfg(test)]
 mod test {
-    use crate::{QM31, u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31, u31ext_mul_u31_by_constant, u31ext_sub};
+    use crate::{
+        u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31,
+        u31ext_mul_u31_by_constant, u31ext_sub, QM31,
+    };
     use bitvm::treepp::*;
     use core::ops::{Add, Mul, Neg};
     use p3_field::{AbstractExtensionField, AbstractField, PrimeField32};
@@ -214,6 +217,9 @@ mod test {
             assert!(exec_result.success);
         }
 
-        eprintln!("qm31 mul_by_m31_by_constant: {}", total_len as f64 / 100.0);
+        eprintln!(
+            "babybear4 mul_by_babybear_by_constant: {}",
+            total_len as f64 / 100.0
+        );
     }
 }
