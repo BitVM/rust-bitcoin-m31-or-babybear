@@ -1,7 +1,5 @@
-use crate::pushable;
 use crate::{u31_add, u31_mul, u31_sub, U31Config};
-use bitcoin::ScriptBuf as Script;
-use bitcoin_script::script;
+use bitvm::treepp::*;
 
 // Input: A1 B1 A2 B2
 // Output:
@@ -91,9 +89,9 @@ pub fn karatsuba_complex_big<M: U31Config>() -> Script {
 
 #[cfg(test)]
 mod test {
-    use crate::{execute_script, M31};
-    use crate::{karatsuba_complex_big, karatsuba_complex_small, pushable};
-    use bitcoin_script::script;
+    use crate::M31;
+    use crate::{karatsuba_complex_big, karatsuba_complex_small};
+    use bitvm::treepp::*;
     use core::ops::{Add, Mul, Sub};
     use p3_field::extension::Complex;
     use p3_field::PrimeField32;

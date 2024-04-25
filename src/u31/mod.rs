@@ -1,37 +1,36 @@
-use crate::{pushable, unroll};
-use bitcoin::ScriptBuf as Script;
-use bitcoin_script::script;
+use bitvm::treepp::*;
 
 mod m31;
 pub use m31::*;
 
 mod babybear;
+use crate::unroll;
 pub use babybear::*;
 
 pub trait U31Config {
     const MOD: u32;
 }
 
-fn u31_to_v31<M: U31Config>() -> Script {
+pub fn u31_to_v31<M: U31Config>() -> Script {
     script! {
         { M::MOD } OP_SUB
     }
 }
 
-fn v31_to_u31<M: U31Config>() -> Script {
+pub fn v31_to_u31<M: U31Config>() -> Script {
     script! {
         { M::MOD } OP_ADD
     }
 }
 
-fn u31_add_v31<M: U31Config>() -> Script {
+pub fn u31_add_v31<M: U31Config>() -> Script {
     script! {
         OP_ADD
         { u31_adjust::<M>() }
     }
 }
 
-fn v31_add_u31<M: U31Config>() -> Script {
+pub fn v31_add_u31<M: U31Config>() -> Script {
     script! {
         OP_ADD
         { v31_adjust::<M>() }
@@ -171,7 +170,7 @@ pub fn u31_mul<M: U31Config>() -> Script {
 
 #[cfg(test)]
 mod test {
-    use crate::execute_script;
+    use bitvm::treepp::*;
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
 
