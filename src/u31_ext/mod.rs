@@ -1,4 +1,3 @@
-use bitcoin::opcodes::Ordinary::OP_TOALTSTACK;
 use crate::{u31_add_v31, u31_to_bits, u31_to_v31, unroll, v31_add, v31_double};
 use bitvm::treepp::*;
 
@@ -178,10 +177,10 @@ pub fn u31ext_mul_u31<C: U31ExtConfig>() -> Script {
 
 #[cfg(test)]
 mod test {
-    use crate::{u31ext_equalverify, u31ext_mul_u31, QM31, M31, U31Config};
+    use crate::{u31ext_equalverify, u31ext_mul_u31, QM31};
     use bitvm::treepp::*;
     use p3_field::extension::Complex;
-    use p3_field::{AbstractExtensionField, AbstractField, Field, PrimeField32};
+    use p3_field::{AbstractExtensionField, AbstractField, PrimeField32};
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
 
@@ -213,23 +212,15 @@ mod test {
             { a[0].real().as_canonical_u32() }
             { b.as_canonical_u32() }
             { mul_script.clone() }
-            /*for i in 0..15 {
-                { b.mul_2exp_u64(2 * i).as_canonical_u32() as i64 - (M31::MOD as i64) }
-                { b.mul_2exp_u64(2 * i + 1).as_canonical_u32() as i64 - (M31::MOD as i64) }
-                { (b.mul_2exp_u64(2 * i).as_canonical_u32() + b.mul_2exp_u64(2 * i + 1).as_canonical_u32()) as i64 - (M31::MOD as i64) }
-            }
-            { b.mul_2exp_u64(30).as_canonical_u32() as i64 - (M31::MOD as i64) }*/
             { c[1].imag().as_canonical_u32() }
             { c[1].real().as_canonical_u32() }
             { c[0].imag().as_canonical_u32() }
             { c[0].real().as_canonical_u32() }
-            /*{ u31ext_equalverify::<QM31>() }
-            OP_TRUE*/
+            { u31ext_equalverify::<QM31>() }
+            OP_TRUE
         };
 
         let exec_result = execute_script(script);
-        println!("{:4}", exec_result.final_stack);
-        println!("{:?}", exec_result.error);
         assert!(exec_result.success);
     }
 }
