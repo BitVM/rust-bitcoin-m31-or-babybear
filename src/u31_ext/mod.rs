@@ -151,3 +151,19 @@ pub fn u31ext_mul_u31_by_constant<C: U31ExtConfig>(constant: u32) -> Script {
         { u31_mul_by_constant::<C::BaseFieldConfig>(constant) }
     }
 }
+
+pub fn u31ext_toaltstack<C: U31ExtConfig>() -> Script {
+    script! {
+        for _ in 0..C::DEGREE {
+            OP_TOALTSTACK
+        }
+    }
+}
+
+pub fn u31ext_fromaltstack<C: U31ExtConfig>() -> Script {
+    script! {
+        for _ in 0..C::DEGREE {
+            OP_FROMALTSTACK
+        }
+    }
+}
