@@ -167,3 +167,23 @@ pub fn u31ext_fromaltstack<C: U31ExtConfig>() -> Script {
         }
     }
 }
+
+pub fn u31ext_copy<C: U31ExtConfig>(offset: usize) -> Script {
+    let a = offset * (C::DEGREE as usize) + (C::DEGREE as usize) - 1;
+
+    script! {
+        for _ in 0..C::DEGREE {
+            { a } OP_PICK
+        }
+    }
+}
+
+pub fn u31ext_roll<C: U31ExtConfig>(offset: usize) -> Script {
+    let a = offset * (C::DEGREE as usize) + (C::DEGREE as usize) - 1;
+
+    script! {
+        for _ in 0..C::DEGREE {
+            { a } OP_ROLL
+        }
+    }
+}

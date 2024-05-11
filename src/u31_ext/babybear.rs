@@ -50,8 +50,8 @@ impl U31ExtConfig for BabyBear4 {
 #[cfg(test)]
 mod test {
     use crate::{
-        u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31,
-        u31ext_mul_u31_by_constant, u31ext_sub, QM31,
+        u31ext_add, u31ext_copy, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31,
+        u31ext_mul_u31_by_constant, u31ext_roll, u31ext_sub,
     };
     use bitvm::treepp::*;
     use core::ops::{Add, Mul, Neg};
@@ -209,7 +209,7 @@ mod test {
                 { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
                 { mul_script.clone() }
                 { c[3].as_canonical_u32() } { c[2].as_canonical_u32() } { c[1].as_canonical_u32() } { c[0].as_canonical_u32() }
-                { u31ext_equalverify::<QM31>() }
+                { u31ext_equalverify::<BabyBear4>() }
                 OP_TRUE
             };
 
@@ -221,5 +221,61 @@ mod test {
             "babybear4 mul_by_babybear_by_constant: {}",
             total_len as f64 / 100.0
         );
+    }
+
+    #[test]
+    fn test_u31ext_copy() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+
+        let a = rng.gen::<F>();
+        let b = rng.gen::<F>();
+
+        let a: &[p3_baby_bear::BabyBear] = a.as_base_slice();
+        let b: &[p3_baby_bear::BabyBear] = b.as_base_slice();
+
+        let copy_script = u31ext_copy::<BabyBear4>(1);
+
+        let script = script! {
+            { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
+            { b[3].as_canonical_u32() } { b[2].as_canonical_u32() } { b[1].as_canonical_u32() } { b[0].as_canonical_u32() }
+            { copy_script.clone() }
+            { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
+            { u31ext_equalverify::<BabyBear4>() }
+            { b[3].as_canonical_u32() } { b[2].as_canonical_u32() } { b[1].as_canonical_u32() } { b[0].as_canonical_u32() }
+            { u31ext_equalverify::<BabyBear4>() }
+            { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
+            { u31ext_equalverify::<BabyBear4>() }
+            OP_TRUE
+        };
+
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
+    }
+
+    #[test]
+    fn test_u31ext_roll() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+
+        let a = rng.gen::<F>();
+        let b = rng.gen::<F>();
+
+        let a: &[p3_baby_bear::BabyBear] = a.as_base_slice();
+        let b: &[p3_baby_bear::BabyBear] = b.as_base_slice();
+
+        let roll_script = u31ext_roll::<BabyBear4>(1);
+
+        let script = script! {
+            { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
+            { b[3].as_canonical_u32() } { b[2].as_canonical_u32() } { b[1].as_canonical_u32() } { b[0].as_canonical_u32() }
+            { roll_script.clone() }
+            { a[3].as_canonical_u32() } { a[2].as_canonical_u32() } { a[1].as_canonical_u32() } { a[0].as_canonical_u32() }
+            { u31ext_equalverify::<BabyBear4>() }
+            { b[3].as_canonical_u32() } { b[2].as_canonical_u32() } { b[1].as_canonical_u32() } { b[0].as_canonical_u32() }
+            { u31ext_equalverify::<BabyBear4>() }
+            OP_TRUE
+        };
+
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
     }
 }

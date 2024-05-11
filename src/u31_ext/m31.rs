@@ -34,8 +34,8 @@ impl U31ExtConfig for QM31 {
 #[cfg(test)]
 mod test {
     use crate::{
-        u31ext_add, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31,
-        u31ext_mul_u31_by_constant, u31ext_sub,
+        u31ext_add, u31ext_copy, u31ext_double, u31ext_equalverify, u31ext_mul, u31ext_mul_u31,
+        u31ext_mul_u31_by_constant, u31ext_roll, u31ext_sub,
     };
     use bitvm::treepp::*;
     use core::ops::{Add, Mul, Neg};
@@ -254,5 +254,88 @@ mod test {
         }
 
         eprintln!("qm31 mul_by_m31_by_constant: {}", total_len as f64 / 100.0);
+    }
+
+    #[test]
+    fn test_u31ext_copy() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+
+        let a = rng.gen::<F>();
+        let b = rng.gen::<F>();
+
+        let a: &[Complex<p3_mersenne_31::Mersenne31>] = a.as_base_slice();
+        let b: &[Complex<p3_mersenne_31::Mersenne31>] = b.as_base_slice();
+
+        let copy_script = u31ext_copy::<QM31>(1);
+
+        let script = script! {
+            { a[1].imag().as_canonical_u32() }
+            { a[1].real().as_canonical_u32() }
+            { a[0].imag().as_canonical_u32() }
+            { a[0].real().as_canonical_u32() }
+            { b[1].imag().as_canonical_u32() }
+            { b[1].real().as_canonical_u32() }
+            { b[0].imag().as_canonical_u32() }
+            { b[0].real().as_canonical_u32() }
+            { copy_script.clone() }
+            { a[1].imag().as_canonical_u32() }
+            { a[1].real().as_canonical_u32() }
+            { a[0].imag().as_canonical_u32() }
+            { a[0].real().as_canonical_u32() }
+            { u31ext_equalverify::<QM31>() }
+            { b[1].imag().as_canonical_u32() }
+            { b[1].real().as_canonical_u32() }
+            { b[0].imag().as_canonical_u32() }
+            { b[0].real().as_canonical_u32() }
+            { u31ext_equalverify::<QM31>() }
+            { a[1].imag().as_canonical_u32() }
+            { a[1].real().as_canonical_u32() }
+            { a[0].imag().as_canonical_u32() }
+            { a[0].real().as_canonical_u32() }
+            { u31ext_equalverify::<QM31>() }
+            OP_TRUE
+        };
+
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
+    }
+
+    #[test]
+    fn test_u31ext_roll() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0u64);
+
+        let a = rng.gen::<F>();
+        let b = rng.gen::<F>();
+
+        let a: &[Complex<p3_mersenne_31::Mersenne31>] = a.as_base_slice();
+        let b: &[Complex<p3_mersenne_31::Mersenne31>] = b.as_base_slice();
+
+        let roll_script = u31ext_roll::<QM31>(1);
+
+        let script = script! {
+            { a[1].imag().as_canonical_u32() }
+            { a[1].real().as_canonical_u32() }
+            { a[0].imag().as_canonical_u32() }
+            { a[0].real().as_canonical_u32() }
+            { b[1].imag().as_canonical_u32() }
+            { b[1].real().as_canonical_u32() }
+            { b[0].imag().as_canonical_u32() }
+            { b[0].real().as_canonical_u32() }
+            { roll_script.clone() }
+            { a[1].imag().as_canonical_u32() }
+            { a[1].real().as_canonical_u32() }
+            { a[0].imag().as_canonical_u32() }
+            { a[0].real().as_canonical_u32() }
+            { u31ext_equalverify::<QM31>() }
+            { b[1].imag().as_canonical_u32() }
+            { b[1].real().as_canonical_u32() }
+            { b[0].imag().as_canonical_u32() }
+            { b[0].real().as_canonical_u32() }
+            { u31ext_equalverify::<QM31>() }
+            OP_TRUE
+        };
+
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
     }
 }
