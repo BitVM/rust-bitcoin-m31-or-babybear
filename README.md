@@ -12,13 +12,16 @@ The overhead for field extension is slightly different due to the extension poly
 - multiplication: 1415 weight units
 - multiplication by constant: ~744 weight units (M31), ~738 weight units (BabyBear)
 
-For the degree-4 extension of BabyBear over x^4 - 11, we have:
+For the degree-4 extension of BabyBear over x^4 + 11, we have:
 
 - addition: 84 weight units
 - subtraction: 63 weight units
-- multiplication: 13594 weight units
+- multiplication: 13576 weight units
 - multiplication by BabyBear: 4702 weight units
-- multiplication by BabyBear constant: ~2963 weight units
+- multiplication by BabyBear constant: ~2973 weight units
+
+Note that Plonky3 uses x^4 - 11 as the extension polynomial. Here we use the one from RISC Zero, which is more heavily 
+used in production, and it is x^4 + 11.
 
 For the degree-4 extension of M31 using y^2 - 2 - i over the complex field x^2 + 1, we have:
 
