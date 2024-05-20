@@ -101,32 +101,32 @@ mod test {
     use crate::{karatsuba_small, BabyBear};
     use bitvm::treepp::*;
     use core::ops::{Add, Mul};
-    use p3_baby_bear::BabyBear as P3BabyBear;
-    use p3_field::PrimeField32;
-    use rand::{Rng, SeedableRng};
+    use rand::SeedableRng;
     use rand_chacha::ChaCha20Rng;
+    use risc0_core::field::baby_bear::BabyBearElem;
+    use risc0_core::field::Elem;
 
     #[test]
     fn test_small_karatsuba() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
-        let a1: P3BabyBear = prng.gen();
-        let b1: P3BabyBear = prng.gen();
-        let a2: P3BabyBear = prng.gen();
-        let b2: P3BabyBear = prng.gen();
+        let a1: BabyBearElem = BabyBearElem::random(&mut prng);
+        let b1: BabyBearElem = BabyBearElem::random(&mut prng);
+        let a2: BabyBearElem = BabyBearElem::random(&mut prng);
+        let b2: BabyBearElem = BabyBearElem::random(&mut prng);
 
         let first = a1.mul(a2);
         let second = a1.mul(b2).add(a2.mul(b1));
         let third = b1.mul(b2);
 
         let script = script! {
-            { a1.as_canonical_u32() } { b1.as_canonical_u32() } { a2.as_canonical_u32() } { b2.as_canonical_u32() }
+            { a1.as_u32() } { b1.as_u32() } { a2.as_u32() } { b2.as_u32() }
             { karatsuba_small::<BabyBear>() }
-            { third.as_canonical_u32() }
+            { third.as_u32() }
             OP_EQUALVERIFY
-            { second.as_canonical_u32() }
+            { second.as_u32() }
             OP_EQUALVERIFY
-            { first.as_canonical_u32() }
+            { first.as_u32() }
             OP_EQUAL
         };
         let exec_result = execute_script(script);
@@ -137,15 +137,15 @@ mod test {
     fn test_big_karatsuba() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
-        let a1: P3BabyBear = prng.gen();
-        let b1: P3BabyBear = prng.gen();
-        let c1: P3BabyBear = prng.gen();
-        let d1: P3BabyBear = prng.gen();
+        let a1: BabyBearElem = BabyBearElem::random(&mut prng);
+        let b1: BabyBearElem = BabyBearElem::random(&mut prng);
+        let c1: BabyBearElem = BabyBearElem::random(&mut prng);
+        let d1: BabyBearElem = BabyBearElem::random(&mut prng);
 
-        let a2: P3BabyBear = prng.gen();
-        let b2: P3BabyBear = prng.gen();
-        let c2: P3BabyBear = prng.gen();
-        let d2: P3BabyBear = prng.gen();
+        let a2: BabyBearElem = BabyBearElem::random(&mut prng);
+        let b2: BabyBearElem = BabyBearElem::random(&mut prng);
+        let c2: BabyBearElem = BabyBearElem::random(&mut prng);
+        let d2: BabyBearElem = BabyBearElem::random(&mut prng);
 
         let group1_first = a1.mul(a2);
         let group1_second = a1.mul(b2).add(a2.mul(b1));
@@ -160,26 +160,26 @@ mod test {
         let group2_third = b1.mul(d2).add(b2.mul(d1));
 
         let script = script! {
-            { a1.as_canonical_u32() } { b1.as_canonical_u32() } { c1.as_canonical_u32() } { d1.as_canonical_u32() }
-            { a2.as_canonical_u32() } { b2.as_canonical_u32() } { c2.as_canonical_u32() } { d2.as_canonical_u32() }
+            { a1.as_u32() } { b1.as_u32() } { c1.as_u32() } { d1.as_u32() }
+            { a2.as_u32() } { b2.as_u32() } { c2.as_u32() } { d2.as_u32() }
             { karatsuba_big::<BabyBear>() }
-            { group3_third.as_canonical_u32() }
+            { group3_third.as_u32() }
             OP_EQUALVERIFY
-            { group3_second.as_canonical_u32() }
+            { group3_second.as_u32() }
             OP_EQUALVERIFY
-            { group3_first.as_canonical_u32() }
+            { group3_first.as_u32() }
             OP_EQUALVERIFY
-            { group2_third.as_canonical_u32() }
+            { group2_third.as_u32() }
             OP_EQUALVERIFY
-            { group2_second.as_canonical_u32() }
+            { group2_second.as_u32() }
             OP_EQUALVERIFY
-            { group2_first.as_canonical_u32() }
+            { group2_first.as_u32() }
             OP_EQUALVERIFY
-            { group1_third.as_canonical_u32() }
+            { group1_third.as_u32() }
             OP_EQUALVERIFY
-            { group1_second.as_canonical_u32() }
+            { group1_second.as_u32() }
             OP_EQUALVERIFY
-            { group1_first.as_canonical_u32() }
+            { group1_first.as_u32() }
             OP_EQUAL
         };
         let exec_result = execute_script(script);

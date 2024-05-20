@@ -12,7 +12,7 @@ bitcoin-scriptexec = { git = "https://github.com/BitVM/rust-bitcoin-scriptexec/"
 rand_chacha = "0.3.1"
 rand = "0.8.5"
 
-p3-baby-bear = { git = "https://github.com/Plonky3/Plonky3" }
+risc0-core = "0.21.0"
 p3-field = { git = "https://github.com/Plonky3/Plonky3" }
 p3-mersenne-31 = { git = "https://github.com/Plonky3/Plonky3" }
 
