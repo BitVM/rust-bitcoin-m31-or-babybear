@@ -53,3 +53,8 @@ already uses a lookup table).
 In case one of the multipliers is a constant, we can have more efficient multiplication using a relaxed NAF representation, 
 which saves from 1415 down to \~738 for BabyBear on degree-1 element multiplication in this special case. We use "\~" to 
 emphasize that this cost is variable and depends on the constant.
+
+The BabyBear4's multiplication overhead slightly goes down from 13594 to 13576 because we switched the extension polynomial 
+into x^4 + 11 (the one used by RISC Zero) from x^4 - 11 (the one used by Plonky3) as the former is more heavily used in 
+production. This slightly reduces the cost because multiplication by -11 can be done slightly cheaper than multiplication 
+by 11.
