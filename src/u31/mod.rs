@@ -97,17 +97,25 @@ pub fn v31_sub<M: U31Config>() -> Script {
 
 pub fn u31_neg<M: U31Config>() -> Script {
     script! {
-        { M::MOD }
-        OP_SWAP
-        OP_SUB
+        OP_DUP
+        OP_IF
+            { M::MOD }
+            OP_SWAP
+            OP_SUB
+        OP_ENDIF
     }
 }
 
 pub fn v31_neg<M: U31Config>() -> Script {
     script! {
+        OP_DUP
         { -(M::MOD as i64) }
-        OP_SWAP
-        OP_SUB
+        OP_EQUAL
+        OP_NOTIF
+            { -(M::MOD as i64) }
+            OP_SWAP
+            OP_SUB
+        OP_ENDIF
     }
 }
 
